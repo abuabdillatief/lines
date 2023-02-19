@@ -16,6 +16,8 @@ var Red = color.New(color.FgRed).SprintFunc()
 var err error
 
 func main() {
+	maxLine = 1000
+	
 	args := os.Args
 	mydir, _ := os.Getwd()
 
@@ -32,7 +34,6 @@ func main() {
 		maxLine, err = strconv.Atoi(args[2])
 		if err != nil {
 			println("incorrect input on second param, default to 1000")
-			maxLine = 1000
 		}
 	}
 
