@@ -11,7 +11,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var maxLine = 1000
+var maxLine int
 var Red = color.New(color.FgRed).SprintFunc()
 var err error
 
@@ -32,6 +32,7 @@ func main() {
 		maxLine, err = strconv.Atoi(args[2])
 		if err != nil {
 			println("incorrect input on second param, default to 1000")
+			maxLine = 1000
 		}
 	}
 
@@ -46,6 +47,10 @@ func PrintDir(dirName string) {
 
 	paths := strings.Split(dirName, "/")
 	dirName = strings.Join(paths, "/")
+	if strings.HasSuffix(dirName, "/") {
+		dirName = dirName[:len(dirName)-1]
+	}
+
 
 	filepath.Walk(dirName, func(name string, info os.FileInfo, _ error) error {
 		res := ""
