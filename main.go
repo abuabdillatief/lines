@@ -5,12 +5,20 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+
+	"github.com/fatih/color"
 )
+
+var maxLine = 1000
+var Red = color.New(color.FgRed).SprintFunc()
+var err error
 
 func main() {
 	args := os.Args
 	mydir, _ := os.Getwd()
+
 
 	splittedPath := strings.Split(mydir, "/")
 	currentDir := splittedPath[len(splittedPath)-1]
@@ -18,6 +26,13 @@ func main() {
 	path := "../" + currentDir + "/"
 	if len(args) > 1 {
 		path = "../" + currentDir + "/" + args[1]
+	}
+
+	if len(args) >= 2 {
+		maxLine, err = strconv.Atoi(args[2])
+		if err != nil {
+			println("incorrect input on second param, default to 1000")
+		}
 	}
 
 	PrintDir(path)
@@ -29,19 +44,29 @@ func PrintDir(dirName string) {
 		return
 	}
 
-	filepath.Walk(dirName, func(name string, info os.FileInfo, err error) error {
+	paths := strings.Split(dirName, "/")
+	dirName = strings.Join(paths, "/")
+
+	filepath.Walk(dirName, func(name string, info os.FileInfo, _ error) error {
 		res := ""
 		newPath := strings.ReplaceAll(name, "../", "")
+		fileName := ""
 		if strings.Contains(newPath, "/") {
 			splitted := strings.Split(newPath, "/")[1:]
 			GetSpace(&res, info.IsDir(), len(splitted))
-			res += splitted[len(splitted)-1]
+			fileName = splitted[len(splitted)-1]
 		}
 
+		totalLine := GetLines(name)
 		if !info.IsDir() {
-			res += fmt.Sprintf(" (%d lines)", GetLines(name))
+			fileName += fmt.Sprintf(" (%d lines)",totalLine)
 		}
-		println(res)
+
+		if totalLine > maxLine {
+			println(res+Red(fileName))
+		} else {
+			println(res+fileName)
+		}
 		return nil
 	})
 }
