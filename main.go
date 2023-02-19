@@ -30,7 +30,7 @@ func main() {
 		path = "../" + currentDir + "/" + args[1]
 	}
 
-	if len(args) >= 2 {
+	if len(args) >= 3 {
 		maxLine, err = strconv.Atoi(args[2])
 		if err != nil {
 			println("incorrect input on second param, default to 1000")
