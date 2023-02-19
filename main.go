@@ -17,10 +17,9 @@ var err error
 
 func main() {
 	maxLine = 1000
-	
+
 	args := os.Args
 	mydir, _ := os.Getwd()
-
 
 	splittedPath := strings.Split(mydir, "/")
 	currentDir := splittedPath[len(splittedPath)-1]
@@ -48,10 +47,7 @@ func PrintDir(dirName string) {
 
 	paths := strings.Split(dirName, "/")
 	dirName = strings.Join(paths, "/")
-	if strings.HasSuffix(dirName, "/") {
-		dirName = dirName[:len(dirName)-1]
-	}
-
+	dirName = strings.TrimSuffix(dirName, "/")
 
 	filepath.Walk(dirName, func(name string, info os.FileInfo, _ error) error {
 		res := ""
@@ -65,13 +61,13 @@ func PrintDir(dirName string) {
 
 		totalLine := GetLines(name)
 		if !info.IsDir() {
-			fileName += fmt.Sprintf(" (%d lines)",totalLine)
+			fileName += fmt.Sprintf(" (%d lines)", totalLine)
 		}
 
 		if totalLine > maxLine {
-			println(res+Red(fileName))
+			println(res + Red(fileName))
 		} else {
-			println(res+fileName)
+			println(res + fileName)
 		}
 		return nil
 	})
