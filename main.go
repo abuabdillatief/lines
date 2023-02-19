@@ -14,6 +14,7 @@ import (
 var maxLine int
 var Red = color.New(color.FgRed).SprintFunc()
 var err error
+var totalFileWithExceededLines = 0
 
 func main() {
 	maxLine = 1000
@@ -66,11 +67,22 @@ func PrintDir(dirName string) {
 
 		if totalLine > maxLine {
 			println(res + Red(fileName))
+			totalFileWithExceededLines++
 		} else {
 			println(res + fileName)
 		}
 		return nil
 	})
+
+	if totalFileWithExceededLines > 0 {
+		lines := "├"
+		for i := 0; i < len(fmt.Sprint(totalFileWithExceededLines)); i++ {
+			lines+= "─"
+		}
+		lines += "───────────────────────────────"
+		println(lines)
+		println(fmt.Sprintf("%d files have exceeded lines limit", totalFileWithExceededLines))
+	}
 }
 
 // CheckPath will return false if target path does not exist
