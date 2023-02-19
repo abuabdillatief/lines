@@ -75,7 +75,7 @@ func PrintDir(dirName string) {
 	})
 
 	if totalFileWithExceededLines > 0 {
-		lines := "├"
+		lines := "└"
 		for i := 0; i < len(fmt.Sprint(totalFileWithExceededLines)); i++ {
 			lines+= "─"
 		}
