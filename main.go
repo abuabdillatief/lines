@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,11 +13,13 @@ import (
 	"github.com/fatih/color"
 )
 
-var maxLine int
 var Red = color.New(color.FgRed).SprintFunc()
 var Green = color.New(color.FgGreen).SprintFunc()
+
+var maxLine int
 var err error
 var totalFileWithExceededLines = 0
+var showFolderDetail = false
 
 func main() {
 	maxLine = 1000
@@ -35,6 +39,13 @@ func main() {
 		maxLine, err = strconv.Atoi(args[2])
 		if err != nil {
 			println("incorrect input on second param, default to 1000")
+		}
+
+		if len(args) >= 4 {
+			showFolderDetail = false
+			if args[3] == "true" {
+				showFolderDetail = true
+			}
 		}
 	}
 
@@ -62,31 +73,60 @@ func PrintDir(dirName string) {
 		}
 
 		totalLine := GetLines(name)
+		totalFiles, totalFolders := 0, 0
+
 		if !info.IsDir() {
 			fileName += fmt.Sprintf(" (%d lines)", totalLine)
+		} else {
+			totalFiles, totalFolders = GetTotalFilesAndFolders(name)
+		}
+
+		fileFolderInfo := ""
+		if info.IsDir() && showFolderDetail{
+			fileFolderInfo = fmt.Sprintf(" [%d folder(s) and %d file(s)]", totalFolders, totalFiles)
 		}
 
 		if totalLine > maxLine {
-			println(res + Red(fileName))
+			println(res + Red(fileName) + fileFolderInfo)
 			totalFileWithExceededLines++
 		} else {
-			println(res + fileName)
+			if info.IsDir() {
+				println(color.New(color.FgHiWhite, color.Bold).SprintFunc()(res + fileName + fileFolderInfo))
+			} else {
+				println(res + fileName + fileFolderInfo)
+			}
 		}
 		return nil
 	})
 
 	lines := "└"
-	for i := 0; i < len(fmt.Sprint(totalFileWithExceededLines)); i++ {
+	for i := 0; i < len(fmt.Sprint(totalFileWithExceededLines)+fmt.Sprint(maxLine)); i++ {
 		lines += "─"
 	}
-	lines += "───────────────────────────────"
+	lines += "─────────────────────────────────────────"
 	println(lines)
-	if  totalFileWithExceededLines > 0{
-		println(fmt.Sprintf(Red("%d files have exceeded lines limit"), totalFileWithExceededLines))
+	if totalFileWithExceededLines > 0 {
+		println(fmt.Sprintf(Red("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
 	} else {
-		println(fmt.Sprintf(Green("%d files have exceeded lines limit"), totalFileWithExceededLines))
+		println(fmt.Sprintf(Green("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
 	}
+}
 
+func GetTotalFilesAndFolders(path string) (int, int) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	totalFile, totalFolder := 0, 0
+
+	for _, file := range files {
+		if file.IsDir() {
+			totalFolder++
+		} else {
+			totalFile++
+		}
+	}
+	return totalFile, totalFolder
 }
 
 // CheckPath will return false if target path does not exist
