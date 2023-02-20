@@ -1,4 +1,4 @@
-Protobuf Generator
+Lines
 ==================
 
 How to install
