@@ -20,6 +20,8 @@ var maxLine int
 var err error
 var totalFileWithExceededLines = 0
 var showFolderDetail = false
+var excludedFormat = ""
+var excludedFile = map[string]bool{}
 
 func main() {
 	maxLine = 1000
@@ -46,7 +48,13 @@ func main() {
 			if args[3] == "true" {
 				showFolderDetail = true
 			}
+
+			if len(args) >= 5 {
+				excludedFormat = ""
+				excludedFormat = args[4]
+			}
 		}
+
 	}
 
 	PrintDir(path)
@@ -61,8 +69,12 @@ func PrintDir(dirName string) {
 	paths := strings.Split(dirName, "/")
 	dirName = strings.Join(paths, "/")
 	dirName = strings.TrimSuffix(dirName, "/")
-
+	RegisterExcludedFiles(dirName)
 	filepath.Walk(dirName, func(name string, info os.FileInfo, _ error) error {
+		if info.IsDir() {
+			RegisterExcludedFiles(name)
+		}
+
 		res := ""
 		newPath := strings.ReplaceAll(name, "../", "")
 		fileName := ""
@@ -70,6 +82,10 @@ func PrintDir(dirName string) {
 			splitted := strings.Split(newPath, "/")[1:]
 			GetSpace(&res, info.IsDir(), len(splitted))
 			fileName = splitted[len(splitted)-1]
+		}
+		
+		if _, shouldExclude := excludedFile[fileName]; shouldExclude {
+			return nil
 		}
 
 		totalLine := GetLines(name)
@@ -82,7 +98,7 @@ func PrintDir(dirName string) {
 		}
 
 		fileFolderInfo := ""
-		if info.IsDir() && showFolderDetail{
+		if info.IsDir() && showFolderDetail {
 			fileFolderInfo = fmt.Sprintf(" [%d folder(s) and %d file(s)]", totalFolders, totalFiles)
 		}
 
@@ -109,6 +125,19 @@ func PrintDir(dirName string) {
 		println(fmt.Sprintf(Red("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
 	} else {
 		println(fmt.Sprintf(Green("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
+	}
+}
+
+func RegisterExcludedFiles(path string) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), excludedFormat) {
+			excludedFile[file.Name()] = true
+		} 
 	}
 }
 
