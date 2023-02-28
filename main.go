@@ -22,6 +22,9 @@ var totalFileWithExceededLines = 0
 var showFolderDetail = false
 var excludedFormat = ""
 var excludedFile = map[string]bool{}
+var totalLines = 0
+var totalFolderInDir = 0
+var totalFilesInDir = 0
 
 func main() {
 	maxLine = 1000
@@ -69,10 +72,17 @@ func PrintDir(dirName string) {
 	paths := strings.Split(dirName, "/")
 	dirName = strings.Join(paths, "/")
 	dirName = strings.TrimSuffix(dirName, "/")
-	RegisterExcludedFiles(dirName)
+	if excludedFormat != "" {
+		RegisterExcludedFiles(dirName)
+	}
+
 	filepath.Walk(dirName, func(name string, info os.FileInfo, _ error) error {
-		if info.IsDir() {
+		if info.IsDir() && excludedFormat != "" {
 			RegisterExcludedFiles(name)
+		}
+
+		if info.IsDir() {
+			return nil
 		}
 
 		res := ""
@@ -83,7 +93,7 @@ func PrintDir(dirName string) {
 			GetSpace(&res, info.IsDir(), len(splitted))
 			fileName = splitted[len(splitted)-1]
 		}
-		
+
 		if _, shouldExclude := excludedFile[fileName]; shouldExclude {
 			return nil
 		}
@@ -93,7 +103,10 @@ func PrintDir(dirName string) {
 
 		if !info.IsDir() {
 			fileName += fmt.Sprintf(" (%d lines)", totalLine)
-		} else {
+			totalLines += totalLine
+			totalFilesInDir++
+			} else {
+			totalFolderInDir++
 			totalFiles, totalFolders = GetTotalFilesAndFolders(name)
 		}
 
@@ -123,8 +136,14 @@ func PrintDir(dirName string) {
 	println(lines)
 	if totalFileWithExceededLines > 0 {
 		println(fmt.Sprintf(Red("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
-	} else {
-		println(fmt.Sprintf(Green("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
+		println(fmt.Sprintf(Red("Total lines in all files are: %d]"), totalLines))
+		println(fmt.Sprintf(Red("Total files are: %d"), totalFilesInDir))
+		println(fmt.Sprintf(Red("Total folders are: %d"), totalFolderInDir))
+		} else {
+			println(fmt.Sprintf(Green("%d files have exceeded lines limit [limit: %d]"), totalFileWithExceededLines, maxLine))
+			println(fmt.Sprintf(Green("Total lines in all files are: %d]"), totalLines))
+			println(fmt.Sprintf(Green("Total files are: %d"), totalFilesInDir))
+			println(fmt.Sprintf(Green("Total folders are: %d"), totalFolderInDir))
 	}
 }
 
@@ -137,7 +156,7 @@ func RegisterExcludedFiles(path string) {
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), excludedFormat) {
 			excludedFile[file.Name()] = true
-		} 
+		}
 	}
 }
 
